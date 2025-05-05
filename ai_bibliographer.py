@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 import os
 import streamlit as st
-
+from datetime import datetime
 import anthropic
 from anthropic_query import return_claude_response
 
+# streamlit configuration
 load_dotenv()
 api_key = os.getenv("ANTHROPIC_API_KEY")
 website_title = os.getenv("WEBSITE_TITLE")
@@ -20,7 +21,6 @@ def disable_user_interaction():
 def enable_user_interaction():
     st.session_state.input_disabled = False
 
-
 claude_response_data = str()
 st.set_page_config(
     page_title=website_title, 
@@ -29,7 +29,7 @@ st.set_page_config(
     initial_sidebar_state="auto", 
     menu_items=None
     )
-st.title(website_title)
+st.title(website_title, anchor=False)
 
 @st.cache_data
 def list_claude_models():
@@ -38,6 +38,7 @@ def list_claude_models():
 
 available_models = {"Claude 3.7 Sonnet (latest)": "claude-3-7-sonnet-latest"}
 
+# sidebar (left of website)
 st.sidebar.header("About PhiMiSci")
 st.sidebar.info(
     """
@@ -48,15 +49,25 @@ st.sidebar.info(
 
 st.sidebar.header("How does this work?")
 st.sidebar.info(
-    "Your input data is sent to Anthropic's servers and processed in their LLMs."
+    """
+    Your input data is sent to Anthropic's servers and processed in their LLMs.
+    """
 )
 st.sidebar.header("Use with care")
 st.sidebar.warning(
     """
-    Never input personal and/or sensitive information using this form.\n\n
-    Always double check the results returned from a LLM."""
+    Never input personal and/or sensitive information using this form.
+    \n\n
+    Always double check the results returned from a LLM.
+    """
 )
 
+st.sidebar.link_button(
+    url="https://ojs.ub.rub.de/index.php/phimisci/imprint", 
+    label="Imprint"
+    )
+
+# main page (form)
 with st.form("claude-form", border=False):
     chosen_model = st.selectbox(
         "Select a model:",
@@ -75,7 +86,8 @@ with st.form("claude-form", border=False):
         use_container_width = True, 
         type = "primary",
         disabled = st.session_state.input_disabled,
-        on_click = disable_user_interaction)
+        on_click = disable_user_interaction
+        )
     
     if submit_button:
         input_length = len(st.session_state.user_input.strip())
@@ -93,7 +105,7 @@ with st.form("claude-form", border=False):
 
             if input_length > 10:
                 with st.spinner(text="Processing your references using " + \
-                                str(available_models[chosen_model]),
+                                str(available_models[chosen_model]) + "...",
                                 show_time=True):
                     claude_response = return_claude_response(
                         client=llm, 
@@ -110,8 +122,8 @@ with st.form("claude-form", border=False):
 
                     if claude_response_data[0] != "@":
                         st.error("""
-                                Faulty LLM response: Your input does not seem to 
-                                have been a list of references
+                                Faulty LLM response: Your input does not seem 
+                                to have been a list of references.
                                 """)
                         processing_complete = True
                     else:
@@ -129,18 +141,22 @@ with st.form("claude-form", border=False):
             else:
                 processing_complete = True
                 st.error("Your input does not seem to contain anything.")
-        
 
 if submit_button and successful_response:
         st.download_button(
             label="Download .bib",
             data=claude_response_data,
-            file_name="data.bib",
+            file_name="ai-" + datetime.now().strftime("%d-%b-%H-%M") + ".bib",
             mime="text/plain",
             icon=":material/download:",
             use_container_width=True,
             type="primary",
             on_click="ignore"
         )
+
 if submit_button and processing_complete:
-    st.button("Start over", on_click = enable_user_interaction, use_container_width=True)
+    st.button(
+        "Start over", 
+        on_click = enable_user_interaction, 
+        use_container_width=True
+        )
