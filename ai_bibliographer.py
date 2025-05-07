@@ -76,7 +76,7 @@ with st.form("claude-form", border=False):
     )
     ai_input = st.text_area(
         "I'll accept your typed list of references below:", 
-        height=450, 
+        height=350, 
         key="user_input",
         disabled=st.session_state.input_disabled
         )
@@ -136,7 +136,7 @@ with st.form("claude-form", border=False):
                             claude_response_data, 
                             language=None, 
                             wrap_lines=True,
-                            height=150
+                            height=None
                         )
             else:
                 processing_complete = True
