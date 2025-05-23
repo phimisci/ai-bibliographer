@@ -36,7 +36,7 @@ def list_claude_models():
     modellist = llm.models.list(limit=20)
     return {m["display_name"]: m["id"] for m in modellist.to_dict()["data"]}
 
-available_models = {"Claude 3.7 Sonnet (latest)": "claude-3-7-sonnet-latest"}
+available_models = list_claude_models()
 
 # sidebar (left of website)
 st.sidebar.header("About PhiMiSci")
